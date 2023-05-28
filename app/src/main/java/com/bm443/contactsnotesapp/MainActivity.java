@@ -23,6 +23,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView listView;
     private final int CONTACTS_PERMISSION_CODE = 1;
     private final int CONTACTS_REQUEST_CODE = 10;
+    private final int test = 9999;
 
 
     @Override
