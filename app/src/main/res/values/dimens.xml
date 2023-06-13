@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="fab_size">72dp</dimen>
+    <dimen name="fab_image_size">40dp</dimen>
+    <dimen name="fab_margin">10dp</dimen>
+    <dimen name="save_button_width">160dp</dimen>
+    <dimen name="save_button_height">50dp</dimen>
+    <dimen name="save_label_pad">10dp</dimen>
+    <dimen name="edittext_lines">25</dimen>
+    <dimen name="edittext_min_lines">5</dimen>
+    <dimen name="list_element_pad">15dp</dimen>
+    <dimen name="list_element_label_pad">20dp</dimen>
+</resources>

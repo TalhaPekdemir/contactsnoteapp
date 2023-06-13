@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SaveNoteActivity">
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSave"
+        android:layout_width="@dimen/save_button_width"
+        android:layout_height="@dimen/save_button_height"
+        android:text="@string/kaydet_text"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:icon="@android:drawable/ic_menu_save"/>
+
+    <TextView
+        android:id="@+id/lblContactNumber"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/lbl_numara"
+        android:padding="@dimen/save_label_pad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/lblContactName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/lbl_kisi_adi"
+        android:padding="@dimen/save_label_pad"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/lblContactNumber" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/editTextWrapper"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnSave"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/lblContactName">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/editTextNote"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:hint="@string/hint_notunuzu_girin"
+            android:inputType="textMultiLine"
+            android:lines="@integer/edittext_lines"
+            android:gravity="start"
+            android:minLines="@integer/edittext_min_lines"
+            android:text=""
+            android:scrollbars="vertical"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
