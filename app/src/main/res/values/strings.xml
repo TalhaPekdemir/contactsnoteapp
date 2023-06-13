@@ -1,3 +1,9 @@
 <resources>
-    <string name="app_name">ContactsNotesApp</string>
+    <string name="app_name">Rehber Notlarım</string>
+    <string name="add_new_note">Add new note</string>
+    <string name="rehberden_sec_text">Rehberden Seç</string>
+    <string name="kaydet_text">Kaydet</string>
+    <string name="lbl_numara">Numara:</string>
+    <string name="hint_notunuzu_girin">Notunuzu girin...</string>
+    <string name="lbl_kisi_adi">Kişi adı:</string>
 </resources>

@@ -1,30 +1,45 @@
 package com.bm443.contactsnotesapp;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ListView;
 import android.widget.Toast;
 
+import com.bm443.contactsnotesapp.adapter.NotesRecyclerViewAdapter;
+import com.bm443.contactsnotesapp.dao.INotDAO;
+import com.bm443.contactsnotesapp.model.Note;
+import com.bm443.contactsnotesapp.service.AppDatabase;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class MainActivity extends AppCompatActivity {
+import java.util.List;
+
+
+public class MainActivity extends AppCompatActivity implements NotesRecyclerViewAdapter.OnNotesClickListener {
     private final String TAG = "MainActivity";
-    private Button button;
-    private ListView listView;
+    private FloatingActionButton fabAddNote;
+    private RecyclerView notes;
+    NotesRecyclerViewAdapter mNotesRecyclerViewAdapter;
     private final int CONTACTS_PERMISSION_CODE = 1;
     private final int CONTACTS_REQUEST_CODE = 10;
-    private final int test = 9999;
-
+    private AppDatabase appDatabase;
+    private INotDAO mNotDAO;
+    private List<Note> mNoteList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,33 +51,26 @@ public class MainActivity extends AppCompatActivity {
 
         initComponents();
         registerListeners();
+        loadData();
     }
 
     private void initComponents() {
-        button = findViewById(R.id.button);
-        listView = findViewById(R.id.contacts_list);
+        fabAddNote = findViewById(R.id.fabAddNote);
+        notes = findViewById(R.id.notes);
+
+        appDatabase = AppDatabase.getAppDatabase(MainActivity.this);
+        mNotDAO = appDatabase.getNoteDao();
     }
 
     private void registerListeners(){
-        contactsButtonListener();
-        listviewItemClickedListener();
+        fabAddNoteListener();
     }
 
-    private void contactsButtonListener(){
-        button.setOnClickListener(new View.OnClickListener() {
+    private void fabAddNoteListener(){
+        fabAddNote.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 launchContactsIntent();
-            }
-        });
-    }
-
-    private void listviewItemClickedListener(){
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Object item =  listView.getItemAtPosition(position);
-                Toast.makeText(MainActivity.this, "You selected : " + item, Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -71,6 +79,16 @@ public class MainActivity extends AppCompatActivity {
         Intent pickContact = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
         pickContact.setType(ContactsContract.CommonDataKinds.Phone.CONTENT_TYPE);
         startActivityForResult(pickContact, CONTACTS_REQUEST_CODE);
+    }
+
+    private void launchSaveNoteIntent(String contactNumber, String contactName){
+        Intent addNewNote = new Intent(MainActivity.this, SaveNoteActivity.class);
+        Note note = new Note();
+        note.setId(-1);
+        note.setContactNumber(contactNumber);
+        note.setContactName(contactName);
+        addNewNote.putExtra("new_note", note);
+        startActivity(addNewNote);
     }
 
     private void getContactNumberAndName(@Nullable Intent data){
@@ -88,12 +106,26 @@ public class MainActivity extends AppCompatActivity {
             int nameIndex = cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
             String number = cursor.getString(numberIndex);
             String name = cursor.getString(nameIndex);
-            Toast.makeText(this, "Numara: " + number + "Name:" + name, Toast.LENGTH_SHORT).show();
+
+            // Not yazılacak intent'e git.
+            launchSaveNoteIntent(number, name);
         }
 
         if(cursor != null){
             cursor.close();
         }
+    }
+
+    private void loadData(){
+        mNoteList = mNotDAO.loadAllNotes();
+
+        LinearLayoutManager llm = new LinearLayoutManager(this);
+        notes.setLayoutManager(llm);
+        notes.setHasFixedSize(true);
+        notes.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        mNotesRecyclerViewAdapter = new NotesRecyclerViewAdapter(mNoteList, this);
+        notes.setAdapter(mNotesRecyclerViewAdapter);
+        new ItemTouchHelper(itemTouchHelperCallback).attachToRecyclerView(notes);
     }
 
     @Override
@@ -106,4 +138,48 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+    @Override
+    protected void onResume() {
+        loadData();
+        super.onResume();
+    }
+
+    @Override
+    public void onNoteClick(int position) {
+        Intent intent = new Intent(this, SaveNoteActivity.class);
+        intent.putExtra("update_note", mNoteList.get(position));
+        startActivity(intent);
+    }
+
+    ItemTouchHelper.SimpleCallback itemTouchHelperCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.RIGHT | ItemTouchHelper.LEFT) {
+        @Override
+        public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            return false;
+        }
+
+        @Override
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("Not Siliniyor")
+                    .setMessage("Notu silmek istediğinize emin misiniz?")
+                    .setPositiveButton("EVET", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mNotDAO.deleteNote(mNoteList.get(viewHolder.getAdapterPosition()));
+                            mNoteList.remove(viewHolder.getAdapterPosition());
+                            mNotesRecyclerViewAdapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+                        }
+                    })
+                    .setNegativeButton("HAYIR", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            mNotesRecyclerViewAdapter.notifyDataSetChanged();
+                            Toast.makeText(MainActivity.this, "Silme işlemi iptal edildi.", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .create();
+            alertDialog.show();
+        }
+    };
 }
